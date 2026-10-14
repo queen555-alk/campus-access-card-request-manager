@@ -114,3 +114,34 @@ def load_requests(path):
 def reset():
     """For tests only."""
     _requests.clear()
+
+# storage.py
+
+_REQUESTS = {}          # or however storage already keeps state
+_NEXT_ID = 1
+
+
+def add_request(holder):
+    """Create a new 'requested' record and return it."""
+    global _NEXT_ID
+    req = {
+        "id": str(_NEXT_ID),
+        "holder": holder,
+        "status": "requested",
+        "approved_by": None,
+    }
+    _REQUESTS[req["id"]] = req
+    _NEXT_ID += 1
+    return req
+
+
+def list_requests():
+    """Return all records."""
+    return list(_REQUESTS.values())
+
+
+def reset_storage():
+    """Clear all state. Used by tests."""
+    global _NEXT_ID
+    _REQUESTS.clear()
+    _NEXT_ID = 1

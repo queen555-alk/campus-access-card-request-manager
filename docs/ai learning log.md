@@ -101,3 +101,36 @@
 - **Final decision (used, adjusted or rejected, and why):**
 
   I decided to use the JSON storage approach because it allows request records to persist between program runs. I retained temporary-file replacement for saving and validation-before-replacement for loading to improve data safety. I would also test file-writing failures and malformed JSON separately to verify the error-handling behaviour.
+  
+# Engineer B
+My first AI-assisted cycle was designing the state machine for workflow.py.
+I asked the AI to enumerate every legal and illegal transition for a four-state
+system (requested, approved, issued, returned, plus rejected), and it
+produced a clean table I could turn into test cases. What I learned is that the
+AI is very good at exhaustive enumeration but bad at knowing which states are
+terminal in our domain — it suggested allowing rejected → approved, which I
+had to reject because a rejected request is history in this app. The lesson:
+use the AI to widen the space of options, then narrow it myself with domain
+judgment.
+
+My second cycle was about error handling in cli.py. I initially wrote a menu
+that let WorkflowError propagate and crash the app, and I asked the AI why
+that felt wrong. It walked me through the "strict core, forgiving shell" pattern
+— validate hard in the workflow layer, catch and translate at the boundary —
+and I restructured run_menu to catch WorkflowError and a last-resort
+Exception inside the loop. What I learned is that I was conflating two
+concerns (correctness and user experience) in one place, and the AI's framing
+made the split obvious. I also learned to distrust the AI's first suggestion:
+it wanted to silently retry the failed operation, which I rejected because
+blind retries hide problems from the user.
+
+My third cycle was writing tests/test_workflow.py, specifically the atomicity
+test. I asked the AI how to prove that a failed transition leaves the record
+untouched, and it suggested snapshotting the record before the failing call and
+comparing dicts afterward — simple and effective. But the AI also suggested
+mocking update_request to assert it was never called, which is stronger but
+couples the test to implementation details. I chose the snapshot approach
+because it tests behavior, not internals. The broader lesson from this cycle is
+that the AI is a fast source of options — including ones I wouldn't have
+thought of — but the choice between them is mine, and it has to be driven by
+what I actually want the code to guarantee.
